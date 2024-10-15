@@ -89,13 +89,15 @@ fn print_and_manage_files(printer: &str, downloads_folder: &str) {
     }
 
     if zpl_files.len() > 1 {
-        println!("Multiple .zpl files found. Do you want to delete them all after printing? (y/n)");
+        println!(
+            "Multiple .zpl files found. Do you want to mark them as used after printing? (y/n)"
+        );
         let mut confirmation = String::new();
         io::stdin()
             .read_line(&mut confirmation)
             .expect("Failed to read line");
         if confirmation.trim().to_lowercase() != "y" {
-            println!("Files will not be deleted. Exiting.");
+            println!("Files will not be marked as used. Exiting.");
             return;
         }
     }
@@ -138,8 +140,12 @@ fn print_and_manage_files(printer: &str, downloads_folder: &str) {
                     }
 
                     if job_completed {
-                        println!("Print job completed. Deleting {:?}", file_path.display());
-                        fs::remove_file(file_path).expect("Failed to delete file");
+                        println!(
+                            "Print job completed. Marking {:?} as used.",
+                            file_path.display()
+                        );
+                        let new_file_path = file_path.with_extension("used");
+                        fs::rename(&file_path, new_file_path).expect("Failed to mark file as used");
                     } else {
                         println!("Print job did not complete within the timeout period.");
                         // Optionally cancel the job if necessary
@@ -157,7 +163,6 @@ fn print_and_manage_files(printer: &str, downloads_folder: &str) {
             };
         }
     }
-
     if zpl_files.len() > 1 {
         println!("Please re-download the .zpl files.");
     }
